@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penales Mundial 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none; /* Evita que la pantalla haga scroll al jugar */
+        }
+
+        body {
+            background-color: #061423;
+            font-family: 'Teko', sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Pantalla de Inicio (Registro) */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+            z-index: 100;
+        }
+
+        #login-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #00ffff;
+            text-align: center;
+        }
+
+        #player-name {
+            font-size: 1.5rem;
+            padding: 10px;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        button {
+            font-size: 1.8rem;
+            padding: 10px 40px;
+            background-color: #00ffff;
+            color: #061423;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Teko', sans-serif;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* Pantalla de Juego */
+        #game-screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            background-image: url('Gemini_Generated_Image_1w7mmv1w7mmv1w7m.png'); /* Usa tu fondo aquí */
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        /* Tablero de Líderes y Marcador */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 2px solid #00ffff;
+        }
+
+        .stats-panel {
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        #leaderboard {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ffff;
+            padding: 10px;
+            border-radius: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            max-width: 150px;
+        }
+
+        #leaderboard h3 {
+            color: #00ffff;
+            border-bottom: 1px solid #00ffff;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        /* Área de la Portería */
+        #stadium-area {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #goal-frame {
+            position: absolute;
+            top: 20%;
+            left: 10%;
+            width: 80%;
+            height: 60%;
+            border: 5px solid white;
+            border-bottom: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #keeper {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3rem;
+            transition: left 0.2s linear;
+        }
+
+        /* Mira para apuntar */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #00ffff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #00ffff;
+            z-index: 10;
+        }
+
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background-color: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Controles Inferiores */
+        #controls {
+            height: 120px;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top: 2px solid #00ffff;
+            flex-direction: column;
+        }
+
+        #controls p {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+
+        #shoot-btn {
+            font-size: 2.5rem;
+            padding: 15px 60px;
+            border-radius: 50px;
+            background: linear-gradient(90deg, #00ffff, #00bfff);
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        /* Mensaje de Gol / Falla */
+        #feedback-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            text-shadow: 0 0 20px black;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE REGISTRO -->
+    <div id="login-screen">
+        <h1>MUNDIAL 2026</h1>
+        <input type="text" id="player-name" placeholder="Ingresa tu nombre" maxlength="10">
+        <button onclick="startGame()">ENTRAR A LA CANCHA</button>
+    </div>
+
+    <!-- PANTALLA DE JUEGO -->
+    <div id="game-screen">
+        <div id="top-bar">
+            <div class="stats-panel">Jugador: <span id="display-name" style="color:#00ffff;">---</span></div>
+            <div class="stats-panel">Goles: <span id="current-score" style="color:#00ffff;">0</span></div>
+        </div>
+
+        <div id="leaderboard">
+            <h3>GOLEADORES</h3>
+            <div id="leaderboard-list">
+                <!-- Se llena con JS -->
+            </div>
+        </div>
+
+        <div id="stadium-area">
+            <div id="goal-frame"></div>
+            <div id="keeper">🧤</div>
+            <!-- La mira que arrastras con el dedo -->
+            <div id="crosshair"></div>
+            <div id="feedback-msg">¡GOL!</div>
+        </div>
+
+        <div id="controls">
+            <p>Arrastra la mira 👆 para apuntar</p>
+            <button id="shoot-btn" onclick="shoot()">¡PATEAR!</button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentPlayer = "";
+        let score = 0;
+        let isShooting = false;
+        
+        // Elementos del DOM
+        const loginScreen = document.getElementById('login-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const playerNameInput = document.getElementById('player-name');
+        const displayName = document.getElementById('display-name');
+        const currentScoreEl = document.getElementById('current-score');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const crosshair = document.getElementById('crosshair');
+        const keeper = document.getElementById('keeper');
+        const stadiumArea = document.getElementById('stadium-area');
+        const feedbackMsg = document.getElementById('feedback-msg');
+
+        // Lógica del Portero
+        let keeperPos = 50;
+        let keeperDirection = 1;
+        let keeperSpeed = 2;
+
+        function animateKeeper() {
+            keeperPos += keeperSpeed * keeperDirection;
+            if (keeperPos > 85 || keeperPos < 15) {
+                keeperDirection *= -1; // Cambia de lado
+            }
+            keeper.style.left = keeperPos + '%';
+            requestAnimationFrame(animateKeeper);
+        }
+
+        // Lógica de Apuntar (Arrastrar la mira)
+        let isDragging = false;
+
+        crosshair.addEventListener('touchstart', (e) => isDragging = true);
+        crosshair.addEventListener('mousedown', (e) => isDragging = true);
+
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('mouseup', () => isDragging = false);
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging || isShooting) return;
+            const touch = e.touches[0];
+            moveCrosshair(touch.clientX, touch.clientY);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging || isShooting) return;
+            moveCrosshair(e.clientX, e.clientY);
+        });
+
+        function moveCrosshair(x, y) {
+            const rect = stadiumArea.getBoundingClientRect();
+            // Limitar dentro del área del estadio
+            if(y > rect.top && y < rect.bottom && x > rect.left && x < rect.right){
+                crosshair.style.left = (x - rect.left) + 'px';
+                crosshair.style.top = (y - rect.top) + 'px';
+            }
+        }
+
+        // Iniciar Juego
+        function startGame() {
+            const name = playerNameInput.value.trim().toUpperCase();
+            if (name === "") return alert("Por favor ingresa un nombre");
+            
+            currentPlayer = name;
+            displayName.innerText = currentPlayer;
+            score = 0;
+            updateScoreUI();
+            
+            loginScreen.style.display = "none";
+            gameScreen.style.display = "flex";
+            
+            updateLeaderboardUI();
+            animateKeeper();
+
+            // Centrar mira inicialmente
+            crosshair.style.left = '50%';
+            crosshair.style.top = '50%';
+        }
+
+        // Función de Disparo
+        function shoot() {
+            if (isShooting) return;
+            isShooting = true;
+
+            const crossRect = crosshair.getBoundingClientRect();
+            const keeperRect = keeper.getBoundingClientRect();
+            const goalRect = document.getElementById('goal-frame').getBoundingClientRect();
+
+            // Animación visual rápida de la mira (simulando el tiro)
+            crosshair.style.transform = 'translate(-50%, -50%) scale(0.5)';
+            crosshair.style.backgroundColor = 'white';
+
+            setTimeout(() => {
+                // Lógica de colisión
+                const hitKeeper = !(
+                    crossRect.top > keeperRect.bottom ||
+                    crossRect.bottom < keeperRect.top ||
+                    crossRect.right < keeperRect.left ||
+                    crossRect.left > keeperRect.right
+                );
+
+                const insideGoalX = crossRect.left >= goalRect.left && crossRect.right <= goalRect.right;
+                const insideGoalY = crossRect.top >= goalRect.top && crossRect.bottom <= goalRect.bottom;
+                const insideGoal = insideGoalX && insideGoalY;
+
+                if (hitKeeper) {
+                    showFeedback("¡ATAJÓ!", "red");
+                    saveScore(); // Si falla, se guarda su racha actual y se reinicia
+                    score = 0; 
+                } else if (insideGoal) {
+                    showFeedback("¡GOLAZO!", "#00ffff");
+                    score++;
+                    keeperSpeed += 0.5; // Más difícil cada vez
+                    saveScore(); // Actualiza el tablero con el nuevo gol
+                } else {
+                    showFeedback("¡AFUERA!", "white");
+                    saveScore();
+                    score = 0;
+                }
+
+                updateScoreUI();
+
+                // Reiniciar mira
+                setTimeout(() => {
+                    crosshair.style.transform = 'translate(-50%, -50%) scale(1)';
+                    crosshair.style.backgroundColor = 'transparent';
+                    isShooting = false;
+                }, 1000);
+
+            }, 300); // 300ms de retraso simulando el viaje del balón
+        }
+
+        function showFeedback(text, color) {
+            feedbackMsg.innerText = text;
+            feedbackMsg.style.color = color;
+            feedbackMsg.style.opacity = 1;
+            setTimeout(() => feedbackMsg.style.opacity = 0, 1000);
+        }
+
+        function updateScoreUI() {
+            currentScoreEl.innerText = score;
+        }
+
+        // --- LÓGICA DEL TABLERO DE LÍDERES (Guarda automáticamente) ---
+        function saveScore() {
+            // Obtenemos los datos guardados, o creamos un array vacío si no hay
+            let leaderboard = JSON.parse(localStorage.getItem('mundialLeaderboard')) || [];
+            
+            // Buscamos si el jugador ya existe
+            const existingPlayerIndex = leaderboard.findIndex(p => p.name === currentPlayer);
+
+            if (existingPlayerIndex !== -1) {
+                // Si existe, solo actualizamos si el nuevo puntaje es mayor al anterior
+                if (score > leaderboard[existingPlayerIndex].score) {
+                    leaderboard[existingPlayerIndex].score = score;
+                }
+            } else {
+                // Si es nuevo, lo agregamos
+                leaderboard.push({ name: currentPlayer, score: score });
+            }
+
+            // Ordenamos de mayor a menor puntaje
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // Guardamos solo el Top 5 para no saturar la pantalla
+            leaderboard = leaderboard.slice(0, 5);
+            
+            // Guardamos en la memoria del navegador
+            localStorage.setItem('mundialLeaderboard', JSON.stringify(leaderboard));
+            
+            updateLeaderboardUI();
+        }
+
+        function updateLeaderboardUI() {
+            let leaderboard = JSON.parse(localStorage.getItem('mundialLeaderboard')) || [];
+            leaderboardList.innerHTML = "";
+            
+            leaderboard.forEach(player => {
+                const row = document.createElement('div');
+                row.className = 'leaderboard-entry';
+                row.innerHTML = `<span>${player.name}</span> <span style="color:#00ffff;">${player.score}</span>`;
+                leaderboardList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
