@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mundial 2026 AR - Penales Progresivos</title>
+    <title>Mundial 2026 AR - Torneo Oficial</title>
     
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
@@ -11,84 +11,133 @@
     <style>
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background-color: transparent; touch-action: none; 
-            font-family: sans-serif;
+            overflow: hidden; background-color: #061423; touch-action: none; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        #ui-layer {
+        /* PANTALLA DE INICIO (Registro) */
+        #login-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10;
-            pointer-events: auto; /* Captura los gestos táctiles */
-            display: flex; flex-direction: column; align-items: center;
-            color: white;
+            background: rgba(6, 20, 35, 0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; color: white;
         }
 
-        #score-board {
-            margin-top: 20px;
-            background: rgba(0, 0, 0, 0.7); padding: 10px 20px;
-            border-radius: 10px; border: 2px solid #00ffff;
-            font-size: 24px; font-weight: bold; pointer-events: none;
+        #login-screen h1 { font-size: 3rem; color: #00ffff; margin-bottom: 20px; text-shadow: 0 0 10px #00ffff; text-align: center; }
+        
+        #player-name {
+            font-size: 1.5rem; padding: 10px; margin-bottom: 20px;
+            border-radius: 8px; border: 2px solid #00ffff; background: transparent;
+            color: white; text-align: center; outline: none; width: 80%; max-width: 300px;
         }
+
+        #start-btn {
+            font-size: 1.5rem; padding: 15px 40px; background-color: #00ffff; color: #061423;
+            border: none; border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px #00ffff; transition: transform 0.1s;
+        }
+        #start-btn:active { transform: scale(0.95); }
+
+        /* CAPA UI DEL JUEGO */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10; pointer-events: auto; /* Permite deslizar para jugar */
+            display: none; flex-direction: column; justify-content: space-between;
+            color: white; padding: 15px; box-sizing: border-box;
+        }
+
+        .top-bar { display: flex; justify-content: space-between; pointer-events: none; }
+
+        #score-panel {
+            background: rgba(0, 0, 0, 0.7); padding: 10px 15px;
+            border-radius: 10px; border: 1px solid #00ffff;
+            font-size: 18px; font-weight: bold; pointer-events: none;
+        }
+
+        /* TABLERO DE LÍDERES */
+        #leaderboard-panel {
+            background: rgba(0, 0, 0, 0.7); padding: 10px;
+            border-radius: 10px; border: 1px solid #00ffff;
+            font-size: 14px; pointer-events: none; min-width: 120px;
+        }
+        #leaderboard-panel h3 { margin: 0 0 5px 0; color: #00ffff; border-bottom: 1px solid #00ffff; padding-bottom: 3px; font-size: 16px; text-align: center;}
+        .lb-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
 
         #scanning-overlay {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px;
-            text-align: center; pointer-events: none;
+            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
+            text-align: center; pointer-events: none; border: 1px solid #fff;
         }
 
         #hint {
-            position: absolute; bottom: 40px; background: rgba(0,0,0,0.6);
-            padding: 10px 20px; border-radius: 20px; display: none; pointer-events: none;
+            align-self: center; background: rgba(0,0,0,0.6);
+            padding: 10px 20px; border-radius: 20px; display: none; pointer-events: none; margin-bottom: 30px;
         }
 
-        /* Línea de puntería */
+        /* Línea de puntería interactiva */
         #aim-line {
-            position: absolute;
-            width: 4px;
-            height: 0;
-            background-color: rgba(255, 255, 255, 0.6);
-            transform-origin: top center;
-            z-index: 15;
-            pointer-events: none;
-            display: none;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            position: absolute; width: 4px; height: 0;
+            background-color: rgba(0, 255, 255, 0.8); /* Cyan para verse mejor */
+            transform-origin: top center; z-index: 15; pointer-events: none;
+            display: none; box-shadow: 0 0 10px rgba(0, 255, 255, 1);
         }
 
+        /* PANTALLA FIN DE JUEGO */
         #game-over-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 0, 0, 0.9); display: none;
             flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20; pointer-events: auto; color: white;
+            z-index: 20; pointer-events: auto; color: white; text-align: center;
         }
-
-        #game-over-screen h1 { font-size: 50px; margin-bottom: 10px; text-shadow: 2px 2px 5px black; }
-        #game-over-screen p { font-size: 24px; margin-bottom: 30px; }
-        
+        #game-over-screen h1 { font-size: 40px; margin-bottom: 10px; text-shadow: 2px 2px 5px black; }
         #restart-btn {
-            padding: 15px 40px; font-size: 20px; background-color: white; color: red;
-            border: none; font-weight: bold; border-radius: 10px; cursor: pointer;
+            margin-top: 20px; padding: 15px 40px; font-size: 20px; background-color: white; color: red;
+            border: none; font-weight: bold; border-radius: 10px; cursor: pointer; box-shadow: 0 0 10px black;
         }
     </style>
 </head>
 <body>
 
+    <!-- Pantalla de Login -->
+    <div id="login-screen">
+        <h1>MUNDIAL 2026 AR</h1>
+        <input type="text" id="player-name" placeholder="Ingresa tu nombre" maxlength="12" autocomplete="off">
+        <button id="start-btn" onclick="initGame()">ENTRAR A LA CANCHA</button>
+    </div>
+
+    <!-- Interfaz de Juego -->
     <div id="ui-layer">
-        <div id="score-board">Goles: <span id="score">0</span></div>
+        <div class="top-bar">
+            <div id="score-panel">
+                <div style="color:#00ffff;" id="display-name">JUGADOR</div>
+                <div>Goles: <span id="score">0</span></div>
+            </div>
+            
+            <div id="leaderboard-panel">
+                <h3>TOP GOLEADORES</h3>
+                <div id="leaderboard-list">
+                    <!-- Rellenado por JS -->
+                </div>
+            </div>
+        </div>
+        
         <div id="scanning-overlay">Apunta la cámara a la imagen del Mundial</div>
-        <div id="hint">👆 Desliza el dedo para definir fuerza y trayectoria</div>
+        <div id="hint">👆 Desliza el dedo para disparar</div>
         <div id="aim-line"></div>
     </div>
 
+    <!-- Pantalla de Muerte Súbita -->
     <div id="game-over-screen">
         <h1>¡ATAJADA!</h1>
-        <p>Goles anotados: <span id="final-score">0</span></p>
+        <p style="font-size: 24px;">Fin de la racha</p>
         <button id="restart-btn" onclick="resetGame()">VOLVER A INTENTAR</button>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: targets.mind; uiLoading: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <!-- Escena AR estabilizada -->
+    <!-- Se añadieron filterMinCF y filterBeta para suavizar el tracking del marcador -->
+    <a-scene mindar-image="imageTargetSrc: targets.mind; uiLoading: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
         <a-assets>
-            <!-- Usamos imágenes externas directas para tener los emojis en Alta Calidad en 3D -->
             <img id="img-guante" src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f9e4.png" crossorigin="anonymous">
             <img id="img-balon" src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/26bd.png" crossorigin="anonymous">
         </a-assets>
@@ -97,36 +146,38 @@
 
         <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
             
-            <!-- Marco de la Portería (Transparente en el centro) -->
             <a-entity position="0 0.15 -0.05">
                 <a-box color="white" height="0.4" width="0.02" depth="0.02" position="-0.4 0 0"></a-box>
                 <a-box color="white" height="0.4" width="0.02" depth="0.02" position="0.4 0 0"></a-box>
                 <a-box color="white" height="0.02" width="0.8" depth="0.02" position="0 0.2 0"></a-box>
             </a-entity>
 
-            <!-- Guante del Portero (Imagen plana en AR) -->
             <a-image id="keeper-3d" src="#img-guante" width="0.2" height="0.2" position="0 0.1 0" transparent="true"></a-image>
-            
-            <!-- Balón (Imagen plana en AR) -->
             <a-image id="ball-3d" src="#img-balon" width="0.1" height="0.1" position="0 -0.3 0.15" transparent="true"></a-image>
 
         </a-entity>
     </a-scene>
 
     <script>
+        // Variables Globales
+        let currentPlayer = "";
         let score = 0;
         let isShooting = false;
         let keeperDirection = 1;
-        let keeperSpeed = 0.01; // Velocidad inicial lenta
+        let keeperSpeed = 0.01;
         let animationFrameId;
         let shotAnimationId;
 
+        // Elementos DOM
+        const loginScreen = document.getElementById('login-screen');
+        const uiLayer = document.getElementById('ui-layer');
+        const playerNameInput = document.getElementById('player-name');
+        const displayName = document.getElementById('display-name');
         const scoreEl = document.getElementById('score');
-        const finalScoreEl = document.getElementById('final-score');
+        const leaderboardList = document.getElementById('leaderboard-list');
         const gameOverScreen = document.getElementById('game-over-screen');
         const scanningOverlay = document.getElementById('scanning-overlay');
         const hintEl = document.getElementById('hint');
-        const uiLayer = document.getElementById('ui-layer');
         const aimLine = document.getElementById('aim-line');
         
         const targetEntity = document.getElementById('ar-target');
@@ -134,11 +185,26 @@
         const ball3D = document.getElementById('ball-3d');
 
         const startPos = { x: 0, y: -0.3, z: 0.15 };
-
-        // Variables para el gesto "Deslizar" (Swipe)
         let touchStartX = 0;
         let touchStartY = 0;
 
+        // Inicialización y Login
+        function initGame() {
+            const name = playerNameInput.value.trim().toUpperCase();
+            if (name === "") {
+                alert("Por favor, ingresa tu nombre para el tablero.");
+                return;
+            }
+            currentPlayer = name;
+            displayName.innerText = currentPlayer;
+            
+            loginScreen.style.display = "none";
+            uiLayer.style.display = "flex";
+            
+            loadLeaderboard();
+        }
+
+        // Eventos AR
         targetEntity.addEventListener("targetFound", () => {
             scanningOverlay.style.display = "none";
             hintEl.style.display = "block";
@@ -151,6 +217,7 @@
             cancelAnimationFrame(animationFrameId);
         });
 
+        // Bucle del Portero
         function startGameLoop() {
             let keeperPos = keeper3D.getAttribute('position');
             keeperPos.x += keeperSpeed * keeperDirection;
@@ -162,8 +229,7 @@
             animationFrameId = requestAnimationFrame(startGameLoop);
         }
 
-        // --- LÓGICA DE FUERZA Y TRAYECTORIA --- //
-
+        // --- SISTEMA DE GESTOS (SWIPE) --- //
         uiLayer.addEventListener('pointerdown', (e) => {
             if (isShooting || gameOverScreen.style.display === "flex") return;
             touchStartX = e.clientX;
@@ -181,14 +247,10 @@
             
             let currentX = e.clientX;
             let currentY = e.clientY;
-
             let dx = currentX - touchStartX;
             let dy = currentY - touchStartY;
             
-            // Distancia = Fuerza
             let distance = Math.sqrt(dx * dx + dy * dy);
-            
-            // Ángulo de la línea
             let angle = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
 
             aimLine.style.height = distance + 'px';
@@ -198,39 +260,29 @@
         uiLayer.addEventListener('pointerup', (e) => {
             if (isShooting || gameOverScreen.style.display === "flex" || !touchStartX) return;
             
-            let touchEndX = e.clientX;
-            let touchEndY = e.clientY;
-            
-            let dx = touchEndX - touchStartX;
-            let dy = touchEndY - touchStartY;
+            let dx = e.clientX - touchStartX;
+            let dy = e.clientY - touchStartY;
 
-            // Restablecer gestos
             aimLine.style.display = 'none';
             touchStartX = 0;
             touchStartY = 0;
 
-            // Calcular Fuerza (Longitud del deslizamiento)
             let distance = Math.sqrt(dx * dx + dy * dy);
-            
-            // Si fue un toque simple sin arrastrar, ignorar o disparar al centro suave
-            if (distance < 20) return; 
+            if (distance < 20) return; // Ignorar toques accidentales
 
-            // Determinar velocidad de la animación basado en la fuerza
-            // Distancia mayor = progressIncrease mayor = balón viaja más rápido
-            let shotPower = Math.min(distance / 500, 1); // Normaliza entre 0 y 1
-            let baseSpeed = 0.02;
+            // Calcular fuerza y normalizar coordenadas
+            let shotPower = Math.min(distance / 500, 1); 
+            let baseSpeed = 0.025;
             let speedModifier = baseSpeed + (shotPower * 0.04); 
 
-            // Mapear trayectoria al marco 3D
-            // Invertimos las coordenadas para que si deslizas hacia la izquierda, vaya a la izquierda
-            const targetX = (dx / window.innerWidth) * 2; 
-            const targetY = (-dy / window.innerHeight) * 2 - 0.1; // Ajuste para elevar el balón
+            // Convertir píxeles de pantalla a coordenadas del mundo AR
+            const targetX = (dx / window.innerWidth) * 2.5; 
+            const targetY = (-dy / window.innerHeight) * 2 - 0.1; 
 
             shootBall(targetX, targetY, speedModifier);
         });
 
-        // --- ANIMACIÓN 3D Y COLISIONES --- //
-
+        // --- ANIMACIÓN Y FÍSICAS --- //
         function shootBall(targetX, targetY, speedModifier) {
             isShooting = true;
 
@@ -239,22 +291,19 @@
             const targetPos = { x: targetX, y: targetY, z: -0.05 }; 
 
             function animateShot() {
-                progress += speedModifier; // La fuerza define qué tan rápido suma progreso
+                progress += speedModifier; 
                 if (progress > 1) progress = 1;
 
                 currentPos.x = startPos.x + (targetPos.x - startPos.x) * progress;
                 currentPos.y = startPos.y + (targetPos.y - startPos.y) * progress;
                 currentPos.z = startPos.z + (targetPos.z - startPos.z) * progress;
 
-                // Rotar el balón para efecto visual mientras viaja
                 ball3D.setAttribute('rotation', `0 0 ${progress * 720}`);
                 ball3D.setAttribute('position', currentPos);
 
-                // Checkear colisión cuando cruza el eje Z del portero
+                // Colisión (Hitbox)
                 if (currentPos.z <= 0.02 && currentPos.z >= -0.02) {
                     let kPos = keeper3D.getAttribute('position');
-                    
-                    // Hitbox: distancia entre el guante y el balón
                     let diffX = Math.abs(currentPos.x - kPos.x);
                     let diffY = Math.abs(currentPos.y - kPos.y);
                     
@@ -268,31 +317,28 @@
                 if (progress < 1) {
                     shotAnimationId = requestAnimationFrame(animateShot);
                 } else {
-                    // Evaluar si entró en el rango del marco o se voló
+                    // Evaluar si entró al marco de la portería
                     if(currentPos.x > -0.4 && currentPos.x < 0.4 && currentPos.y > -0.1 && currentPos.y < 0.35){
                         scoreGoal();
                     } else {
-                        triggerGameOver(); // Tiraste fuera del marco
+                        triggerGameOver(); // Tiraste fuera
                     }
                 }
             }
-            
             shotAnimationId = requestAnimationFrame(animateShot);
         }
 
         function scoreGoal() {
             score++;
             scoreEl.innerText = score;
-            keeperSpeed += 0.002; // Aumentar dificultad progresivamente
-            
-            setTimeout(() => {
-                resetBall();
-            }, 800);
+            keeperSpeed += 0.002; 
+            saveScore(); // Guarda y actualiza el récord al instante
+            setTimeout(() => { resetBall(); }, 800);
         }
 
         function triggerGameOver() {
             cancelAnimationFrame(animationFrameId);
-            finalScoreEl.innerText = score;
+            saveScore(); // Guarda el puntaje final antes de morir
             gameOverScreen.style.display = "flex";
         }
 
@@ -306,10 +352,47 @@
         function resetGame() {
             score = 0;
             scoreEl.innerText = score;
-            keeperSpeed = 0.01; // Restablecer velocidad lenta
+            keeperSpeed = 0.01; 
             resetBall();
             gameOverScreen.style.display = "none";
             startGameLoop();
+        }
+
+        // --- SISTEMA DE MARCADORES (LOCALSTORAGE) --- //
+        function saveScore() {
+            let leaderboard = JSON.parse(localStorage.getItem('mundialARLeaderboard')) || [];
+            const index = leaderboard.findIndex(p => p.name === currentPlayer);
+
+            if (index !== -1) {
+                if (score > leaderboard[index].score) leaderboard[index].score = score;
+            } else {
+                leaderboard.push({ name: currentPlayer, score: score });
+            }
+
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 5); // Solo guarda el Top 5
+            
+            localStorage.setItem('mundialARLeaderboard', JSON.stringify(leaderboard));
+            loadLeaderboard();
+        }
+
+        function loadLeaderboard() {
+            let leaderboard = JSON.parse(localStorage.getItem('mundialARLeaderboard')) || [];
+            leaderboardList.innerHTML = "";
+            
+            if (leaderboard.length === 0) {
+                leaderboardList.innerHTML = "<div style='text-align:center; color:#888;'>Sin registros</div>";
+                return;
+            }
+
+            leaderboard.forEach(player => {
+                const row = document.createElement('div');
+                row.className = 'lb-row';
+                // Si es el jugador actual, resáltalo en cyan
+                const color = player.name === currentPlayer ? '#00ffff' : '#fff';
+                row.innerHTML = `<span style="color:${color}">${player.name}</span> <span style="color:${color}; font-weight:bold;">${player.score}</span>`;
+                leaderboardList.appendChild(row);
+            });
         }
     </script>
 </body>
