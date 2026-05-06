@@ -9,14 +9,23 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+        /* Reseteo estricto para asegurar que el canvas y el video ocupen todo sin fondos */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: transparent; 
+            touch-action: none; 
+        }
         
         #ui-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10;
-            /* Permite que los toques se registren en esta capa para disparar */
-            pointer-events: auto; 
+            /* pointer-events en none permite que la cámara e interacciones fluyan correctamente */
+            pointer-events: none; 
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -32,22 +41,21 @@
             border: 2px solid #00ffff;
             font-size: 24px;
             font-weight: bold;
-            pointer-events: none; /* Que no estorbe al tocar */
         }
 
         #game-over-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 0, 0, 0.85);
-            display: none;
+            display: none; /* Oculto por defecto */
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 20;
-            pointer-events: auto;
+            pointer-events: auto; /* Permite hacer clic en los botones de esta pantalla */
         }
 
-        #game-over-screen h1 { font-size: 40px; margin-bottom: 10px; text-shadow: 2px 2px 5px black; }
+        #game-over-screen h1 { font-size: 40px; margin-bottom: 10px; text-shadow: 2px 2px 5px black; color: white;}
         
         #restart-btn {
             padding: 15px 40px;
@@ -58,48 +66,50 @@
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
+            pointer-events: auto;
         }
 
         #scanning-overlay {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 20px;
             border-radius: 10px;
-            pointer-events: none;
+            text-align: center;
+            color: white;
         }
 
-        /* Instrucción sutil para el usuario */
         #hint {
             position: absolute;
             bottom: 40px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             padding: 10px;
             border-radius: 20px;
             display: none;
-            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
+    <!-- Capa de Interfaz -->
     <div id="ui-layer">
         <div id="score-board">Goles: <span id="score">0</span></div>
         <div id="scanning-overlay">Apunta la cámara a la imagen del Mundial</div>
         <div id="hint">👆 Toca la pantalla para disparar</div>
     </div>
 
+    <!-- Pantalla de Fin de Juego -->
     <div id="game-over-screen">
         <h1>¡ATAJADA!</h1>
         <button id="restart-btn" onclick="resetGame()">VOLVER A INTENTAR</button>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <!-- Escena AR -->
+    <!-- Se añadieron uiLoading: no; y uiScanning: no; para evitar que bloqueen la cámara -->
+    <a-scene mindar-image="imageTargetSrc: targets.mind; uiLoading: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
-        <!-- Carga de Assets (Modelos 3D) -->
         <a-assets>
-            <!-- REEMPLAZA ESTOS SRC CON TUS ARCHIVOS .GLB -->
             <a-asset-item id="modelo-balon" src="balon.glb"></a-asset-item>
             <a-asset-item id="modelo-portero" src="portero.glb"></a-asset-item>
         </a-assets>
@@ -108,18 +118,15 @@
 
         <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
             
-            <!-- Portería (Solo el marco visible, sin fondo) -->
+            <!-- Marco de la Portería (Transparente en el centro) -->
             <a-entity position="0 0.15 -0.05">
-                <a-box color="white" height="0.4" width="0.02" depth="0.02" position="-0.4 0 0"></a-box> <!-- Poste Izq -->
-                <a-box color="white" height="0.4" width="0.02" depth="0.02" position="0.4 0 0"></a-box>  <!-- Poste Der -->
-                <a-box color="white" height="0.02" width="0.8" depth="0.02" position="0 0.2 0"></a-box>  <!-- Travesaño -->
+                <a-box color="white" height="0.4" width="0.02" depth="0.02" position="-0.4 0 0"></a-box>
+                <a-box color="white" height="0.4" width="0.02" depth="0.02" position="0.4 0 0"></a-box>
+                <a-box color="white" height="0.02" width="0.8" depth="0.02" position="0 0.2 0"></a-box>
             </a-entity>
 
-            <!-- Portero 3D -->
-            <!-- Si no tienes el .glb aún, cambia <a-gltf-model> por <a-box color="red"> para probar la lógica -->
+            <!-- Modelos 3D -->
             <a-gltf-model id="keeper-3d" src="#modelo-portero" scale="0.15 0.15 0.15" position="0 0.1 0"></a-gltf-model>
-
-            <!-- Balón 3D -->
             <a-gltf-model id="ball-3d" src="#modelo-balon" scale="0.05 0.05 0.05" position="0 -0.3 0.15"></a-gltf-model>
 
         </a-entity>
@@ -137,31 +144,32 @@
         const gameOverScreen = document.getElementById('game-over-screen');
         const scanningOverlay = document.getElementById('scanning-overlay');
         const hintEl = document.getElementById('hint');
-        const uiLayer = document.getElementById('ui-layer');
-
+        
         const targetEntity = document.getElementById('ar-target');
         const keeper3D = document.getElementById('keeper-3d');
         const ball3D = document.getElementById('ball-3d');
 
         const startPos = { x: 0, y: -0.3, z: 0.15 };
 
+        // Mostrar elementos cuando la imagen es detectada
         targetEntity.addEventListener("targetFound", () => {
             scanningOverlay.style.display = "none";
             hintEl.style.display = "block";
             startGameLoop();
         });
 
+        // Ocultar elementos si se pierde la imagen
         targetEntity.addEventListener("targetLost", () => {
             scanningOverlay.style.display = "block";
             hintEl.style.display = "none";
             cancelAnimationFrame(animationFrameId);
         });
 
+        // Movimiento del portero
         function startGameLoop() {
             let keeperPos = keeper3D.getAttribute('position');
             keeperPos.x += keeperSpeed * keeperDirection;
             
-            // Límites de la portería
             if (keeperPos.x > 0.35 || keeperPos.x < -0.35) {
                 keeperDirection *= -1;
             }
@@ -169,23 +177,21 @@
             animationFrameId = requestAnimationFrame(startGameLoop);
         }
 
-        // Detectar toque en la pantalla
-        uiLayer.addEventListener('pointerdown', (event) => {
-            if (isShooting || gameOverScreen.style.display === "flex") return;
+        // Lógica de disparo detectando el toque globalmente
+        window.addEventListener('pointerdown', (event) => {
+            // Ignorar el toque si es en el botón de reinicio, si ya está pateando o si perdió
+            if (event.target.tagName === 'BUTTON' || isShooting || gameOverScreen.style.display === "flex") return;
             
-            // Mapear el toque de la pantalla (2D) a la coordenada de la portería (3D local)
-            const rect = uiLayer.getBoundingClientRect();
-            const touchX = event.clientX - rect.left;
-            const touchY = event.clientY - rect.top;
+            const rect = document.body.getBoundingClientRect();
+            const touchX = event.clientX;
+            const touchY = event.clientY;
 
-            // Normalizar de -1 a 1
+            // Normalización para apuntar en 3D
             const normalizedX = (touchX / rect.width) * 2 - 1;
-            // Invertimos Y porque en CSS abajo es +, pero en 3D abajo es -
             const normalizedY = -(touchY / rect.height) * 2 + 1; 
 
-            // Ajustar amplitud del tiro (Multiplicadores ajustables según tu gusto)
             const targetX = normalizedX * 0.6; 
-            const targetY = (normalizedY * 0.4) + 0.1; // Se suma 0.1 para que tienda a ir hacia arriba
+            const targetY = (normalizedY * 0.4) + 0.1; 
 
             shootBall(targetX, targetY);
         });
@@ -196,28 +202,24 @@
 
             let currentPos = { ...startPos };
             let progress = 0;
-            const targetPos = { x: targetX, y: targetY, z: -0.05 }; // Z = -0.05 es dentro de la portería
+            const targetPos = { x: targetX, y: targetY, z: -0.05 }; 
 
             function animateShot() {
-                progress += 0.04; // Velocidad del balón
+                progress += 0.04; 
                 if (progress > 1) progress = 1;
 
-                // Interpolación lineal (Lerp) para mover el balón
                 currentPos.x = startPos.x + (targetPos.x - startPos.x) * progress;
                 currentPos.y = startPos.y + (targetPos.y - startPos.y) * progress;
                 currentPos.z = startPos.z + (targetPos.z - startPos.z) * progress;
 
                 ball3D.setAttribute('position', currentPos);
 
-                // Checkear colisión cuando el balón pasa por la línea del portero (Z ~ 0)
+                // Colisión con el portero en el eje Z
                 if (currentPos.z <= 0.02 && currentPos.z >= -0.02) {
                     let kPos = keeper3D.getAttribute('position');
-                    
-                    // Lógica de Hitbox (caja de colisión)
                     let diffX = Math.abs(currentPos.x - kPos.x);
                     let diffY = Math.abs(currentPos.y - kPos.y);
                     
-                    // Si el balón está a menos de 0.15 unidades del centro del portero
                     if (diffX < 0.15 && diffY < 0.2) {
                         cancelAnimationFrame(shotAnimationId);
                         triggerGameOver();
@@ -228,7 +230,6 @@
                 if (progress < 1) {
                     shotAnimationId = requestAnimationFrame(animateShot);
                 } else {
-                    // Si llega al final y no chocó, es GOL
                     scoreGoal();
                 }
             }
@@ -239,7 +240,7 @@
         function scoreGoal() {
             score++;
             scoreEl.innerText = score;
-            keeperSpeed += 0.002; // Aumentar dificultad
+            keeperSpeed += 0.002; 
             
             setTimeout(() => {
                 resetBall();
